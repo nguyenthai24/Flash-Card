@@ -1,0 +1,30 @@
+# dependencies
+node_modules/
+
+# environment
+.env
+.env.*
+!.env.example
+
+# Next.js
+.next/
+out/
+
+# NestJS
+dist/
+
+# logs
+*.log
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# testing
+coverage/
+
+# cache
+.cache/
