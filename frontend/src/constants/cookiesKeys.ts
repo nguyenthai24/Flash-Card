@@ -1,0 +1,5 @@
+// export const ACCESS_TOKEN = '6368d77915c60944d8b5e1d561530d41';
+// export const REFRESH_TOKEN = '2adcb48f8c30785ae24455c95b82638e';
+
+export const ACCESS_TOKEN = 'k9P2wL5mR7vN1xQ8zT3bY6sJ4hG9aC0v';
+export const REFRESH_TOKEN = 'B7vR2nQ8mK4jL1pX5zY9sW3tC6dF0gH2';

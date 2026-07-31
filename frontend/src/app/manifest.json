@@ -1,0 +1,13 @@
+{
+  "name": "ViHub",
+  "short_name": "ViHub",
+  "description": "game portal",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}
