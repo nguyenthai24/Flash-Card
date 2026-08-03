@@ -46,16 +46,27 @@ export const BACKGROUND = '#DAEEF24D';
 export const BACKGROUND_PRIMARY = '#ffffff';
 export const BACKGROUND_SECONDARY = '#fafafa';
 export const PRIMARY = '#217CD9';
-export const TEXT_PRIMARY = BLUE_GRAY;
+// export const TEXT_PRIMARY = BLUE_GRAY;
 export const TEXT_SECONDARY = '#636567';
 export const HOVER_PRIMARY = LIGHT_BLUE;
 export const BORDER_PRIMARY = '#CFDAE5';
 export const INPUT_DISABLED_BG = '#f1f3f5';
 export const BACKGROUND_TOPUP = '#daeef275';
 
-export const BG_SUCCESS = 'rgba(26, 204, 10, 0.1)';
-export const BG_FAILED = 'rgba(255, 0, 0, 0.1)';
-export const BG_PROCESSING = 'rgba(255, 201, 38, 0.1)';
-export const BG_WAIT = 'rgba(145, 148, 153, 0.1)';
-export const BG_SYNCED = 'rgba(38, 140, 243, 0.1)';
-export const BG_WAIT_TRANSACTION = 'rgba(0, 191, 255, 0.1)';
+// export const BG_SUCCESS = 'rgba(26, 204, 10, 0.1)';
+// export const BG_FAILED = 'rgba(255, 0, 0, 0.1)';
+// export const BG_PROCESSING = 'rgba(255, 201, 38, 0.1)';
+// export const BG_WAIT = 'rgba(145, 148, 153, 0.1)';
+// export const BG_SYNCED = 'rgba(38, 140, 243, 0.1)';
+// export const BG_WAIT_TRANSACTION = 'rgba(0, 191, 255, 0.1)';
+
+export const TEXT_PRIMARY = '#F6F7F9';
+
+export const BG_HEADER = '#172036';
+export const BG_MAIN = '#0E1729';
+export const BG_BUTTON = '#272B3B';
+export const BG_TOGGLE_TRACK = '#17203A';
+export const BG_ICON_LIGHT = '#F5F7F9';
+
+export const BORDER_DEFAULT = '#3F4250';
+export const BORDER_ACCENT = '#302355';

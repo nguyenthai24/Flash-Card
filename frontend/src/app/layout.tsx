@@ -9,7 +9,6 @@ import { QueryProviders } from "~/configs/react-query";
 import StyledComponentsRegistry from "~/configs/styled-component";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { MantineProvider } from "~/theme/provider";
-import Script from "next/script";
 
 const font = Lexend({
   weight: ["400", "500", "600", "700"],
@@ -19,15 +18,10 @@ const font = Lexend({
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | Vihub",
-    default: "Vihub", // a default is required when creating a template
+    template: "%s | Quiz",
+    default: "OpenQuiz", // a default is required when creating a template
   },
-  description: "Vihub game portal",
-  verification: {
-    other: {
-      "google-adsense-account": ["ca-pub-8822698517131882"],
-    },
-  },
+  description: "OpenQuiz",
 };
 
 export const viewport: Viewport = {

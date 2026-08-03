@@ -4,11 +4,9 @@ export const MantineButton = Button.extend({
   defaultProps: {
     size: 'md',
   },
-  styles: {
+  styles: (_, props) => ({
     root: {
-      // height: '4.4rem',
-      // fontSize: '1.6rem',
       fontWeight: 400,
     },
-  },
+  }),
 });
