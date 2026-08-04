@@ -1,0 +1,26 @@
+.root {
+  padding: 0 20px;
+  height: 50px;
+
+  background-color: var(--mantine-color-BT_BUTTON_1);
+  border: 1px solid var(--mantine-color-BORDER_1);
+  color: var(--mantine-color-TEXT_DEFAULT);
+
+  display: flex;
+  justify-content: flex-start;
+
+  box-shadow: none;
+
+  transition:
+    transform 0.2s ease-out,
+    box-shadow 0.2s ease-out;
+}
+
+.root:hover {
+  transform: translateY(-2px) translateZ(0);
+  background-color: var(--mantine-color-BT_BUTTON_1);
+}
+
+.active {
+  box-shadow: 0 2px 8px rgb(168 85 247 / 35%);
+}

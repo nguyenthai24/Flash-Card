@@ -1,5 +1,6 @@
-import { Container } from '@mantine/core';
+import { Container, Stack } from '@mantine/core';
 import StudySetHeader from './components/StudySetHeader';
+import StudyModeNavigation from './components/StudyModeNavigation';
 
 interface IStudySetProps {
   id: string;
@@ -7,8 +8,11 @@ interface IStudySetProps {
 
 export default async function StudySet({ id }: IStudySetProps) {
   return (
-    <Container flex={1}>
-      <StudySetHeader />
+    <Container flex={1} py={20}>
+      <Stack>
+        <StudySetHeader />
+        <StudyModeNavigation />
+      </Stack>
     </Container>
   );
 }

@@ -15,12 +15,9 @@ export default function StyledComponentsRegistry({ children }: { children: React
     return <>{styles}</>;
   });
 
-  if (isClient)
-    return (
-      <>
-        <ThemeProvider theme={theme}>{children}</ThemeProvider>
-      </>
-    );
+  if (typeof window !== 'undefined') {
+    return <ThemeProvider theme={theme}>{children}</ThemeProvider>;
+  }
 
   return (
     <StyleSheetManager sheet={styledComponentsStyleSheet.instance}>

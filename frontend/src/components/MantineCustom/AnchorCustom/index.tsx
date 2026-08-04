@@ -1,38 +1,16 @@
-// components/MantineCustom/Link.tsx
+// components/MantineCustom/AnchorCustom.tsx
 
-import { Anchor, AnchorProps } from '@mantine/core';
-import Link from 'next/link';
+'use client';
+
+import Link, { LinkProps } from 'next/link';
+import styled from 'styled-components';
 import { ReactNode } from 'react';
+import { StyledAnchor } from './styled';
 
-interface AppLinkProps extends AnchorProps {
-  href: string;
+interface AnchorCustomProps extends LinkProps {
   children: ReactNode;
 }
 
-export default function AnchorCustom({ href, children, ...props }: AppLinkProps) {
-  return (
-    <Anchor
-      component={Link}
-      href={href}
-      px="sm"
-      py={6}
-      style={{
-        border: '1px solid transparent',
-        borderRadius: 6,
-        textDecoration: 'none',
-        transition: 'all 150ms ease',
-      }}
-      styles={{
-        root: {
-          '&:hover': {
-            borderColor: '#ccc',
-            backgroundColor: '#f5f5f5',
-          },
-        },
-      }}
-      {...props}
-    >
-      {children}
-    </Anchor>
-  );
+export default function AnchorCustom({ children, ...props }: AnchorCustomProps) {
+  return <StyledAnchor {...props}>{children}</StyledAnchor>;
 }

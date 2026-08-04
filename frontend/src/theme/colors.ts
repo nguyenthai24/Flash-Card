@@ -65,8 +65,13 @@ export const TEXT_PRIMARY = '#F6F7F9';
 export const BG_HEADER = '#172036';
 export const BG_MAIN = '#0E1729';
 export const BG_BUTTON = '#272B3B';
+export const BT_BUTTON_1 = '#282d3cf2';
 export const BG_TOGGLE_TRACK = '#17203A';
 export const BG_ICON_LIGHT = '#F5F7F9';
+export const BG_BUTTON_HOVER = '#26344b';
 
 export const BORDER_DEFAULT = '#3F4250';
 export const BORDER_ACCENT = '#302355';
+export const BORDER_1 = '#ffffff1a ';
+
+export const TEXT_DEFAULT = '#f0f1f5';
