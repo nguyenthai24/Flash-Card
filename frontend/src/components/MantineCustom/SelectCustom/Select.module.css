@@ -1,0 +1,11 @@
+/* .option {
+  color: var(--mantine-color-primary-1);
+
+  &:hover {
+    background-color: var(--mantine-color-background-2);
+  }
+
+  &[data-combobox-selected] {
+    background-color: var(--border-1);
+  }
+} */

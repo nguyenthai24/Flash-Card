@@ -47,6 +47,30 @@ export const mantineTheme = createTheme({
       '#0964b2',
       '#00569f',
     ],
+    background: [
+      '#F5F7F9', // 0 - BG_ICON_LIGHT
+      '#26344B', // 1 - BG_BUTTON_HOVER
+      '#282D3C', // 2 - BT_BUTTON_1
+      '#272B3B', // 3 - BG_BUTTON
+      '#17203A', // 4 - BG_TOGGLE_TRACK
+      '#172036', // 5 - BG_HEADER
+      '#0E1729', // 6 - BG_MAIN
+      '#101827', // 7
+      '#0C1422', // 8
+      '#080E18', // 9
+    ],
+    border: [
+      '#FFFFFF33', // 0
+      '#FFFFFF26', // 1
+      '#FFFFFF1A', // 2 - BORDER_1
+      '#3F4250', // 3 - BORDER_DEFAULT
+      '#302355', // 4 - BORDER_ACCENT
+      '#343746', // 5
+      '#2C2F3C', // 6
+      '#252832', // 7
+      '#1E212B', // 8
+      '#181B24', // 9
+    ],
   },
   other: {
     RED: '#FF0000',

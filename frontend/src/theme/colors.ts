@@ -14,7 +14,7 @@ export const VIOLET_4 = '#A194FF';
 export const ORANGE_1 = '#EC8235';
 export const GREEN_1 = '#1ACC0A';
 
-export const TEXT_1 = '#062D79';
+// export const TEXT_1 = '#062D79';
 
 export const GRAY = '#919499';
 export const GRAY_20 = '#dcdfe2';
@@ -65,7 +65,7 @@ export const TEXT_PRIMARY = '#F6F7F9';
 export const BG_HEADER = '#172036';
 export const BG_MAIN = '#0E1729';
 export const BG_BUTTON = '#272B3B';
-export const BT_BUTTON_1 = '#282d3cf2';
+export const BG_BUTTON_1 = '#282d3cf2';
 export const BG_TOGGLE_TRACK = '#17203A';
 export const BG_ICON_LIGHT = '#F5F7F9';
 export const BG_BUTTON_HOVER = '#26344b';
@@ -75,3 +75,4 @@ export const BORDER_ACCENT = '#302355';
 export const BORDER_1 = '#ffffff1a ';
 
 export const TEXT_DEFAULT = '#f0f1f5';
+export const TEXT_1 = '#B3BDCC';

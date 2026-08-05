@@ -11,7 +11,7 @@ const StyledButtonBase = styled(Button)<{
   padding: 0 20px;
   height: 50px;
 
-  background-color: ${({ theme }) => theme.colors.BT_BUTTON_1};
+  background-color: ${({ theme }) => theme.colors.BG_BUTTON_1};
   border: 1px solid ${({ theme }) => theme.colors.BORDER_1};
   color: ${({ theme }) => theme.colors.TEXT_DEFAULT};
 
@@ -26,7 +26,7 @@ const StyledButtonBase = styled(Button)<{
 
   &:hover {
     transform: translateY(-2px) translateZ(0);
-    background-color: ${({ theme }) => theme.colors.BT_BUTTON_1};
+    background-color: ${({ theme }) => theme.colors.BG_BUTTON_1};
   }
 `;
 
