@@ -5,21 +5,26 @@ import { AppController } from '@/app.controller';
 import { AppService } from '@/app.service';
 import configuration from '@/config/configuration';
 import { envValidationSchema } from './config/env.validation';
+import { DatabaseModule } from './infrastructure/database/database.module';
+import { RedisModule } from './infrastructure/redis/redis.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env.development',
 
       load: [configuration],
 
       validationSchema: envValidationSchema,
 
       validationOptions: {
-        allowUnknown: false,
+        allowUnknown: true,
         abortEarly: false,
       },
     }),
+    DatabaseModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [AppService],
