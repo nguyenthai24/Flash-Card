@@ -4,11 +4,11 @@ import { setupSwagger } from './common/swagger/swagger';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { AllExceptionFilter } from './common/filters/all-exception.filter';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
-  setupSwagger(app);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -19,6 +19,9 @@ async function bootstrap() {
   );
 
   app.useGlobalFilters(new AllExceptionFilter());
+  app.useGlobalInterceptors(new ResponseInterceptor());
+
+  setupSwagger(app);
 
   // const config = new DocumentBuilder()
   //   .setTitle('Cats example')
