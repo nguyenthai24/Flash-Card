@@ -13,11 +13,8 @@ import { RedisModule } from './infrastructure/redis/redis.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env.development',
-
       load: [configuration],
-
       validationSchema: envValidationSchema,
-
       validationOptions: {
         allowUnknown: true,
         abortEarly: false,

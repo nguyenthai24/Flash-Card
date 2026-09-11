@@ -6,18 +6,20 @@ import { MongooseModule } from '@nestjs/mongoose';
   imports: [
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
-
       inject: [ConfigService],
 
-      useFactory: (configService: ConfigService) => ({
-        uri: configService.getOrThrow<string>('database.mongodbUri'),
+      useFactory: (configService: ConfigService) => {
+        const uri = configService.getOrThrow<string>('database.mongodbUri');
 
-        serverSelectionTimeoutMS: 5000,
+        console.log('MongoDB URI:', uri);
 
-        maxPoolSize: 10,
-
-        minPoolSize: 2,
-      }),
+        return {
+          uri,
+          serverSelectionTimeoutMS: 5000,
+          maxPoolSize: 10,
+          minPoolSize: 2,
+        };
+      },
     }),
   ],
 })
