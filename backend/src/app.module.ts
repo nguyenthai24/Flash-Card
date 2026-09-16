@@ -7,6 +7,7 @@ import configuration from '@/config/configuration';
 import { envValidationSchema } from './config/env.validation';
 import { DatabaseModule } from './infrastructure/database/database.module';
 import { RedisModule } from './infrastructure/redis/redis.module';
+import { HealthModule } from './infrastructure/health/health.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { RedisModule } from './infrastructure/redis/redis.module';
     }),
     DatabaseModule,
     RedisModule,
+    // HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
