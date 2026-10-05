@@ -23,6 +23,7 @@ import { HealthModule } from './infrastructure/health/health.module';
     }),
     DatabaseModule,
     RedisModule,
+    HealthModule,
     // HealthModule,
   ],
   controllers: [AppController],

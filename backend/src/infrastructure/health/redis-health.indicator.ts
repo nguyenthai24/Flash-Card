@@ -1,10 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { HealthIndicatorResult } from '@nestjs/terminus';
 import { Redis } from 'ioredis';
+import { REDIS_CLIENT } from '../redis/redis.constants';
 
 @Injectable()
 export class RedisHealthIndicator {
-  constructor(private readonly redis: Redis) {}
+  constructor(
+    @Inject(REDIS_CLIENT)
+    private readonly redis: Redis,
+  ) {}
 
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
     try {
