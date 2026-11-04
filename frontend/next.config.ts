@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import rewrites from './src/configs/rewrites.mjs';
 
 const nextConfig: NextConfig = {
   // output: 'standalone',
@@ -14,7 +15,7 @@ const nextConfig: NextConfig = {
   cleanDistDir: true,
   reactStrictMode: false,
   productionBrowserSourceMaps: false,
-  // rewrites,
+  rewrites,
   images: {
     remotePatterns: [
       {

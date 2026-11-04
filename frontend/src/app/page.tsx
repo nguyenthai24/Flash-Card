@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { LoginScreen } from '~/features/auth/screens';
+import { LoginScreen } from '~/features/auth/login';
 
 export const metadata: Metadata = {
   title: { absolute: 'Đăng nhập | FlashCard' },
