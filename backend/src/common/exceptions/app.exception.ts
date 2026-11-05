@@ -1,24 +1,13 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException } from '@nestjs/common';
 
-import { ErrorCode } from './error-code.enum';
+import { ErrorCode } from '@/common/constants/error-code.constant';
 
 export class AppException extends HttpException {
   constructor(
-    code: ErrorCode,
+    public readonly errorCode: ErrorCode,
     message: string,
-    status: HttpStatus,
-    details: unknown = null,
+    statusCode: number,
   ) {
-    super(
-      {
-        success: false,
-        error: {
-          code,
-          message,
-          details,
-        },
-      },
-      status,
-    );
+    super(message, statusCode);
   }
 }

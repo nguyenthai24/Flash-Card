@@ -9,6 +9,7 @@ import { DatabaseModule } from './infrastructure/database/database.module';
 import { RedisModule } from './infrastructure/redis/redis.module';
 import { HealthModule } from './infrastructure/health/health.module';
 import { OrderModule } from './modules/orders/order.module';
+import { UserModule } from './modules/users/user.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { OrderModule } from './modules/orders/order.module';
     RedisModule,
     HealthModule,
     OrderModule,
+    UserModule,
     // HealthModule,
   ],
   controllers: [AppController],
