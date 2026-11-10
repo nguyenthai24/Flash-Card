@@ -1,26 +1,37 @@
-import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import { UsersService } from './users.service';
+import { CreateUserDto } from './dto/requests/create-user-dto';
+import { UpdateUserDto } from './dto/requests/update-user.dto';
 
-import { User, UserSchema } from './schemas/user.schemas';
-import { USER_REPOSITORY } from './constants/user-repository.token';
-import { UserRepository } from './repositories/user.repository';
+@Controller('users')
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
 
-@Module({
-  imports: [
-    MongooseModule.forFeature([
-      {
-        name: User.name,
-        schema: UserSchema,
-      },
-    ]),
-  ],
-  providers: [
-    UserRepository,
-    {
-      provide: USER_REPOSITORY,
-      useExisting: UserRepository,
-    },
-  ],
-  exports: [USER_REPOSITORY],
-})
-export class UserModule {}
+  @Post()
+  create(@Body() dto: CreateUserDto) {
+    return this.usersService.create(dto);
+  }
+
+  @Get(':id')
+  findById(@Param('id') id: string) {
+    return this.usersService.findById(id);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+    return this.usersService.update(id, dto);
+  }
+
+  // @Delete(':id')
+  // delete(@Param('id') id: string) {
+  //   return this.usersService.delete(id);
+  // }
+}
