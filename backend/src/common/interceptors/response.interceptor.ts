@@ -29,11 +29,14 @@ export class ResponseInterceptor<T> implements NestInterceptor<
   ): Observable<ApiResponse<T>> {
     return next.handle().pipe(
       map((result) => {
+        console.log(result);
         const isPayload = typeof result === 'object' && result !== null;
 
         const payload = isPayload
           ? (result as ApiResponsePayload<T>)
           : { data: result };
+
+        console.log(payload);
 
         return {
           success: true,

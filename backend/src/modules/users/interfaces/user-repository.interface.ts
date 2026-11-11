@@ -25,6 +25,8 @@ export interface IUserRepository {
 
   findByUsername(username: string): Promise<UserRecord | null>;
 
+  findAll(): Promise<UserRecord[]>;
+
   create(data: CreateUserData): Promise<UserRecord>;
 
   update(id: string, data: UpdateUserData): Promise<UserRecord | null>;

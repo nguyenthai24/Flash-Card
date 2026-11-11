@@ -32,12 +32,19 @@ export class AllExceptionFilter implements ExceptionFilter {
     const statusCode = this.getHttpStatus(exception);
     const errorResponse = this.buildErrorResponse(exception);
 
+    console.log(statusCode);
+
     if (statusCode >= HttpStatus.INTERNAL_SERVER_ERROR) {
       this.logger.error(
         `${request.method} ${request.url}`,
         exception instanceof Error ? exception.stack : String(exception),
       );
     }
+
+    this.logger.error(
+      `${request.method} ${request.url}`,
+      exception instanceof Error ? exception.stack : String(exception),
+    );
 
     response.status(statusCode).json({
       ...errorResponse,

@@ -37,6 +37,12 @@ export class UserRepository implements IUserRepository {
     return user ? this.toRecord(user) : null;
   }
 
+  async findAll(): Promise<UserRecord[]> {
+    const users = await this.userModel.find().exec();
+    console.log(users);
+    return users;
+  }
+
   async create(data: CreateUserData): Promise<UserRecord> {
     const user = await this.userModel.create(data);
 
