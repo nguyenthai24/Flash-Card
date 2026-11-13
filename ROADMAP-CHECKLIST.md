@@ -34,35 +34,35 @@
 ## 2. Authentication thật (Backend + nối Frontend)
 
 ### 2.1 🅱 Backend
-- [ ] Module `users`: entity (id, email, passwordHash, name, avatar, emailVerifiedAt, role, createdAt…)
+- [x] Module `users`: entity (id, email, password hash, name, avatar, email verification, role, createdAt…)
 - [ ] Chọn DB + ORM (TypeORM / Prisma) và migration
-- [ ] `POST /auth/register` – validate DTO, băm mật khẩu (argon2/bcrypt), tạo user, gửi email xác minh
-- [ ] `POST /auth/login` – kiểm tra mật khẩu, chặn tài khoản chưa xác minh (tuỳ chọn), trả phiên
-- [ ] `POST /auth/refresh`, `POST /auth/logout` (thu hồi refresh token)
-- [ ] `GET /auth/me`
-- [ ] `POST /auth/verify-email` (token một lần, có hạn) và `POST /auth/resend-verification` (cooldown 30–60s)
-- [ ] `POST /auth/forgot-password` (luôn trả thông báo trung tính, không lộ email có tồn tại)
-- [ ] `POST /auth/reset-password` (token một lần, hết hạn 15–60 phút, huỷ mọi phiên cũ)
-- [ ] OAuth Google / Facebook / GitHub: `GET /oauth/:provider`, `GET /oauth/:provider/callback`, liên kết tài khoản trùng email
-- [ ] Gửi email (SMTP/Resend/SendGrid) + template tiếng Việt
-- [ ] Rate limit (`@nestjs/throttler`) cho login / forgot / resend
-- [ ] Khoá tạm sau N lần sai mật khẩu
-- [ ] Guard `JwtAuthGuard`, decorator `@CurrentUser()`, phân quyền role
-- [ ] Mã lỗi thống nhất (`code`, `message`) để Frontend map sang tiếng Việt
+- [x] `POST /auth/register` – validate DTO, băm mật khẩu (argon2/bcrypt), tạo user, gửi email xác minh
+- [x] `POST /auth/login` – kiểm tra mật khẩu, chặn tài khoản chưa xác minh, trả phiên
+- [x] `POST /auth/refresh`, `POST /auth/logout` (thu hồi refresh token)
+- [x] `GET /auth/me`
+- [x] `POST /auth/verify-email` (token một lần, có hạn) và `POST /auth/resend-verification` (cooldown 30–60s)
+- [x] `POST /auth/forgot-password` (luôn trả thông báo trung tính, không lộ email có tồn tại)
+- [x] `POST /auth/reset-password` (token một lần, hết hạn 15–60 phút, huỷ mọi phiên cũ)
+- [x] OAuth Google / Facebook / GitHub: `GET /oauth/:provider`, `GET /oauth/:provider/callback`, liên kết tài khoản trùng email (cần cấu hình client credentials)
+- [x] Gửi email qua Resend + nội dung tiếng Việt (cần cấu hình API key/from)
+- [x] Rate limit (`@nestjs/throttler`) cho register / login / forgot / resend
+- [x] Khoá tạm sau 5 lần sai mật khẩu
+- [x] Guard `JwtAuthGuard`, decorator `@CurrentUser()`, phân quyền role
+- [x] Mã lỗi thống nhất (`code`, `message`) để Frontend map sang tiếng Việt
 
 ### 2.2 🅵 Frontend
-- [ ] Service `features/auth/services` (login, register, forgot, reset, verify, me, logout) dùng axios/fetch chung
-- [ ] Thay `useMockSubmit` trong `screens.tsx` bằng gọi API thật (react-query mutation)
-- [ ] Lưu phiên bằng **httpOnly cookie** (không để token ở localStorage)
-- [ ] Interceptor tự refresh token khi 401
-- [ ] Map mã lỗi backend → thông báo tiếng Việt dưới form (sai mật khẩu, email đã tồn tại, token hết hạn…)
-- [ ] `middleware.ts`: chặn route cần đăng nhập, chuyển về `/login?redirect=…`
-- [ ] Đã đăng nhập thì `/login`, `/register` tự chuyển về trang học
-- [ ] Sau login quay lại trang trước đó (`redirect`)
-- [ ] Trang `/auth/callback` đọc `code/state`, xử lý lỗi, chuyển hướng
-- [ ] Bật nút social khi backend sẵn sàng (bỏ thông báo "chưa cấu hình")
-- [ ] Nút Đăng xuất + hiển thị user ở header
-- [ ] "Ghi nhớ tôi" điều khiển thời hạn phiên
+- [x] Service `features/auth/services` (login, register, forgot, reset, verify, me, logout) dùng fetch chung
+- [x] Thay `useMockSubmit` trong các màn auth bằng gọi API thật (react-query mutation)
+- [x] Lưu phiên bằng **httpOnly cookie** (không để token ở localStorage)
+- [x] Tự refresh token khi request auth nhận 401
+- [x] Map mã lỗi backend → thông báo tiếng Việt dưới form
+- [x] `middleware.ts`: chặn route cần đăng nhập, chuyển về `/login?redirect=…`
+- [x] Đã đăng nhập thì `/login`, `/register` tự chuyển về trang học
+- [x] Sau login quay lại trang trước đó (`redirect`)
+- [x] Trang `/auth/callback` xác nhận phiên OAuth và hiển thị lỗi/thành công
+- [x] Chỉ hiện nút social cho provider đã cấu hình
+- [x] Nút Đăng xuất + hiển thị user ở header
+- [x] "Ghi nhớ tôi" điều khiển thời hạn phiên
 - [ ] 🧪 E2E: đăng ký → xác minh → đăng nhập → đăng xuất; quên → đặt lại mật khẩu
 
 ---

@@ -11,7 +11,9 @@ import {
   PasswordRequirements,
   SubmitButton,
 } from '../components';
-import { NoticeArea, SocialSection, useMockSubmit, type Touched } from '../common/shared';
+import { NoticeArea, SocialSection, type Touched } from '../common/shared';
+import { useAuthAction } from '../common/useAuthAction';
+import { authService } from '../services/auth.service';
 import { getConfirmPasswordError, getEmailError, getNewPasswordError } from '../common/validation';
 
 export function RegistrationScreen() {
@@ -24,7 +26,7 @@ export function RegistrationScreen() {
     password: false,
     confirm: false,
   });
-  const { loading, notice, run } = useMockSubmit();
+  const { loading, notice, noticeTone, run } = useAuthAction();
 
   const emailError = getEmailError(email);
   const passwordError = getNewPasswordError(password);
@@ -35,7 +37,10 @@ export function RegistrationScreen() {
     event.preventDefault();
     setTouched({ email: true, password: true, confirm: true });
     if (invalid || loading) return;
-    void run('Giao diện đang ở chế độ demo: chưa kết nối backend nên không có tài khoản hay email xác minh nào được tạo.');
+    run(
+      () => authService.register({ email, password, re_password: confirm }),
+      { successMessage: 'Tài khoản đã được tạo. Hãy kiểm tra email để xác minh.' },
+    );
   };
 
   return (
@@ -92,7 +97,7 @@ export function RegistrationScreen() {
           idleLabel="Tạo tài khoản"
           loadingLabel="Đang xử lý..."
         />
-        <NoticeArea message={notice} />
+        <NoticeArea message={notice} tone={noticeTone} />
       </AuthForm>
       <div style={{ marginTop: 20 }}>
         <SocialSection />

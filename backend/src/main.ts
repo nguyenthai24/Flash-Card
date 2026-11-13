@@ -6,10 +6,21 @@ import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { AllExceptionFilter } from './common/filters/all-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { ErrorCode } from './common/exceptions/error-code.enum';
+import helmet from 'helmet';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
+  app.use(helmet());
+
+  const config = app.get(ConfigService);
+  const frontendOrigins = (
+    config.get<string>('app.frontendUrl') ?? 'http://localhost:3010'
+  )
+    .split(',')
+    .map((origin) => new URL(origin.trim()).origin);
+  app.enableCors({ origin: frontendOrigins, credentials: true });
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -51,4 +62,4 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+void bootstrap();

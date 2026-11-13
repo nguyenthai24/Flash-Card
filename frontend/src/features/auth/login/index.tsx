@@ -11,7 +11,9 @@ import {
   CheckRow,
   SubmitButton,
 } from '../components';
-import { NoticeArea, SocialSection, useMockSubmit, type Touched } from '../common/shared';
+import { NoticeArea, SocialSection, type Touched } from '../common/shared';
+import { useAuthAction } from '../common/useAuthAction';
+import { authService } from '../services/auth.service';
 import { getEmailError, getPasswordError } from '../common/validation';
 
 export function LoginScreen() {
@@ -22,7 +24,7 @@ export function LoginScreen() {
     email: false,
     password: false,
   });
-  const { loading, notice, run } = useMockSubmit();
+  const { loading, notice, noticeTone, run } = useAuthAction();
 
   const emailError = getEmailError(email);
   const passwordError = getPasswordError(password);
@@ -32,7 +34,15 @@ export function LoginScreen() {
     event.preventDefault();
     setTouched({ email: true, password: true });
     if (invalid || loading) return;
-    void run('Giao diện đang ở chế độ demo: chưa kết nối xác thực nên không có phiên đăng nhập nào được tạo.');
+    const redirect = new URLSearchParams(window.location.search).get('redirect');
+    const destination =
+      redirect?.startsWith('/') && !redirect.startsWith('//') && !redirect.includes('\\')
+        ? redirect
+        : '/';
+    run(
+      () => authService.login({ email, password, rememberMe: remember }),
+      { onSuccess: () => window.location.assign(destination) },
+    );
   };
 
   return (
@@ -81,7 +91,7 @@ export function LoginScreen() {
           idleLabel="Đăng nhập"
           loadingLabel="Đang xử lý..."
         />
-        <NoticeArea message={notice} />
+        <NoticeArea message={notice} tone={noticeTone} />
       </AuthForm>
       <div style={{ marginTop: 20 }}>
         <SocialSection />

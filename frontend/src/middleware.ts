@@ -7,10 +7,9 @@ import {
   HEADER_URL_KEY,
   PATHS,
 } from './constants';
-import { EDEVICE_TYPE } from './types/enums';
 
-// Danh sách các đường dẫn bắt đầu bằng các prefix này sẽ yêu cầu login
-const protectedRoutes = [PATHS.PLAY_GAME];
+const protectedRoutes = ['/study-set'];
+const guestOnlyRoutes = [PATHS.LOGIN, PATHS.REGISTER];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -32,24 +31,18 @@ export function middleware(request: NextRequest) {
     },
   });
 
-  // 2. Kiểm tra quyền truy cập
+  const cookieToken = request.cookies.get(COOKIES_KEYS.ACCESS_TOKEN)?.value;
+  const isGuestOnlyRoute = guestOnlyRoutes.some((route) => pathname === route);
+  if (cookieToken && isGuestOnlyRoute) {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
   if (isProtectedRoute) {
-    // 1. Lấy token từ nhiều nguồn: Ưu tiên SearchParams (cho SDK/Lần đầu login) rồi mới đến Cookies
-    const accessTokenParam = request.nextUrl.searchParams.get('accessToken');
-    // const refreshTokenParam = request.nextUrl.searchParams.get('refreshToken');
-    const cookieToken = request.cookies.get(COOKIES_KEYS.ACCESS_TOKEN)?.value;
-
-    const finalToken = accessTokenParam || cookieToken;
-
-    if (!finalToken) {
-      const ssoUrl = process.env.NEXT_PUBLIC_SSO_URL;
-      const clientId = process.env.NEXT_PUBLIC_SSO_CLIENT_ID;
-
-      // const currentUrl = request.nextUrl.href;
-
-      const loginRedirect = `${ssoUrl}/?client_id=${clientId}&type=${EDEVICE_TYPE.DESKTOP}&scope=${encodeURIComponent('profile,balance')}&state=${encodeURIComponent(url)}`;
-      return NextResponse.redirect(new URL(loginRedirect, request.url));
+    if (!cookieToken) {
+      const loginUrl = new URL(PATHS.LOGIN, request.url);
+      loginUrl.searchParams.set('redirect', `${pathname}${request.nextUrl.search}`);
+      return NextResponse.redirect(loginUrl);
     }
   }
 

@@ -1,7 +1,7 @@
 import { GENDER, UserRole } from '@/common/shares/enums';
 import { BaseEntity } from '@/infrastructure/database/base/base.entity';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Model } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
 // import { UserRole } from '@modules/user-roles/entities/user-role.entity';
 
 export type UserDocument = HydratedDocument<User>;
@@ -17,7 +17,9 @@ export class User extends BaseEntity {
   @Prop({
     required: true,
     unique: true,
-    match: /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+    lowercase: true,
+    trim: true,
+    match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   })
   email!: string;
 
@@ -33,10 +35,9 @@ export class User extends BaseEntity {
   username!: string;
 
   @Prop({
-    required: true,
     select: false,
   })
-  password!: string;
+  password?: string;
 
   @Prop({
     default:
@@ -68,6 +69,44 @@ export class User extends BaseEntity {
 
   @Prop()
   friendly_id!: number;
+
+  @Prop({ type: Date, default: null })
+  email_verified_at?: Date | null;
+
+  @Prop({ select: false })
+  verification_token_hash?: string;
+
+  @Prop({ select: false })
+  verification_token_expires_at?: Date;
+
+  @Prop({ select: false })
+  password_reset_token_hash?: string;
+
+  @Prop({ select: false })
+  password_reset_token_expires_at?: Date;
+
+  @Prop({ type: [Object], default: [], select: false })
+  refresh_sessions!: {
+    id: string;
+    tokenHash: string;
+    expiresAt: Date;
+    rememberMe?: boolean;
+  }[];
+
+  @Prop({ default: 0 })
+  failed_login_attempts!: number;
+
+  @Prop({ type: Date, default: null, select: false })
+  locked_until?: Date | null;
+
+  @Prop({ default: 0 })
+  token_version!: number;
+
+  @Prop({ type: [Object], default: [] })
+  oauth_accounts!: {
+    provider: 'google' | 'facebook' | 'github';
+    providerId: string;
+  }[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

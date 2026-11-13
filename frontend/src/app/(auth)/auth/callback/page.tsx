@@ -5,6 +5,12 @@ export const metadata: Metadata = {
   title: { absolute: 'Đăng nhập mạng xã hội | FlashCard' },
 };
 
-export default function OAuthCallbackPage() {
-  return <OAuthCallbackScreen />;
+interface OAuthCallbackPageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function OAuthCallbackPage({ searchParams }: OAuthCallbackPageProps) {
+  const { status } = await searchParams;
+  const value = Array.isArray(status) ? status[0] : status;
+  return <OAuthCallbackScreen status={value} />;
 }

@@ -12,6 +12,6 @@ export const metadata: Metadata = {
 export default async function VerifyEmailResultPage({
   searchParams,
 }: VerifyEmailResultPageProps) {
-  const { result } = await searchParams;
-  return <VerifyEmailResultScreen result={Array.isArray(result) ? result[0] : result} />;
+  const { token } = await searchParams;
+  return <VerifyEmailResultScreen token={Array.isArray(token) ? token[0] : token} />;
 }

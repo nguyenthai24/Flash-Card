@@ -192,6 +192,8 @@ import { ErrorCode } from '@/common/constants/error-code.constant';
 // Cấu trúc response chuẩn khi API xảy ra lỗi
 interface ErrorResponse {
   success: false;
+  code: string;
+  message: string;
   error_code: number;
   error_message: string;
   data: unknown;
@@ -240,6 +242,8 @@ export class AllExceptionFilter implements ExceptionFilter {
     if (exception instanceof AppException) {
       return {
         success: false,
+        code: String(exception.errorCode),
+        message: exception.message,
         error_code: exception.errorCode,
         error_message: exception.message,
         data: null,
@@ -265,6 +269,14 @@ export class AllExceptionFilter implements ExceptionFilter {
         if (errors) {
           return {
             success: false,
+            code:
+              'code' in body && typeof body.code === 'string'
+                ? body.code
+                : 'VALIDATION_ERROR',
+            message:
+              'message' in body && typeof body.message === 'string'
+                ? body.message
+                : 'Validation failed',
             error_code:
               'error_code' in body && typeof body.error_code === 'number'
                 ? body.error_code
@@ -281,10 +293,13 @@ export class AllExceptionFilter implements ExceptionFilter {
 
     // 3. Xử lý các HTTP exception khác như 400, 401, 403, 404, 409...
     if (exception instanceof HttpException) {
+      const message = this.getHttpErrorMessage(exception);
       return {
         success: false,
+        code: this.getStringErrorCode(exception),
+        message,
         error_code: this.getErrorCode(exception.getStatus()),
-        error_message: this.getHttpErrorMessage(exception),
+        error_message: message,
         data: null,
       };
     }
@@ -292,10 +307,43 @@ export class AllExceptionFilter implements ExceptionFilter {
     // 4. Xử lý các exception không xác định hoặc lỗi ngoài dự kiến
     return {
       success: false,
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Internal server error',
       error_code: ErrorCode.INTERNAL_SERVER_ERROR,
       error_message: 'Internal server error',
       data: null,
     };
+  }
+
+  private getStringErrorCode(exception: HttpException): string {
+    const body = exception.getResponse();
+    if (
+      typeof body === 'object' &&
+      body !== null &&
+      'code' in body &&
+      typeof body.code === 'string'
+    ) {
+      return body.code;
+    }
+
+    switch (exception.getStatus()) {
+      case HttpStatus.BAD_REQUEST:
+        return 'BAD_REQUEST';
+      case HttpStatus.UNAUTHORIZED:
+        return 'UNAUTHORIZED';
+      case HttpStatus.FORBIDDEN:
+        return 'FORBIDDEN';
+      case HttpStatus.NOT_FOUND:
+        return 'NOT_FOUND';
+      case HttpStatus.CONFLICT:
+        return 'CONFLICT';
+      case HttpStatus.TOO_MANY_REQUESTS:
+        return 'TOO_MANY_REQUESTS';
+      case HttpStatus.SERVICE_UNAVAILABLE:
+        return 'SERVICE_UNAVAILABLE';
+      default:
+        return 'INTERNAL_SERVER_ERROR';
+    }
   }
 
   /**

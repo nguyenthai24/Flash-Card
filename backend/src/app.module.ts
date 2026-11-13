@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AuthModule } from './modules/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 
 import { AppController } from '@/app.controller';
@@ -28,6 +29,7 @@ import { UserModule } from './modules/users/user.module';
     HealthModule,
     OrderModule,
     UserModule,
+    AuthModule,
     // HealthModule,
   ],
   controllers: [AppController],

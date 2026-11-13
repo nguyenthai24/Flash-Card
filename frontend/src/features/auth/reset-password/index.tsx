@@ -11,17 +11,19 @@ import {
   PasswordRequirements,
   SubmitButton,
 } from '../components';
-import { NoticeArea, useMockSubmit, type Touched } from '../common/shared';
+import { NoticeArea, type Touched } from '../common/shared';
+import { useAuthAction } from '../common/useAuthAction';
+import { authService } from '../services/auth.service';
 import { getConfirmPasswordError, getNewPasswordError } from '../common/validation';
 
-export function ResetPasswordScreen({ hasToken }: { hasToken: boolean }) {
+export function ResetPasswordScreen({ token }: { token: string | null }) {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [touched, setTouched] = useState<Touched<'password' | 'confirm'>>({
     password: false,
     confirm: false,
   });
-  const { loading, notice, run } = useMockSubmit();
+  const { loading, notice, noticeTone, run } = useAuthAction();
 
   const passwordError = getNewPasswordError(password);
   const confirmError = getConfirmPasswordError(password, confirm);
@@ -31,7 +33,11 @@ export function ResetPasswordScreen({ hasToken }: { hasToken: boolean }) {
     event.preventDefault();
     setTouched({ password: true, confirm: true });
     if (invalid || loading) return;
-    void run('Giao diện đang ở chế độ demo: mật khẩu chưa được thay đổi và token chưa được xác thực.');
+    if (!token) return;
+    run(
+      () => authService.resetPassword({ token, password, re_password: confirm }),
+      { successMessage: 'Mật khẩu đã được cập nhật. Bạn có thể đăng nhập.' },
+    );
   };
 
   return (
@@ -41,7 +47,7 @@ export function ResetPasswordScreen({ hasToken }: { hasToken: boolean }) {
       description="Chọn một mật khẩu mạnh mà bạn dễ nhớ."
       footer={<AuthLink href="/login">← Quay lại đăng nhập</AuthLink>}
     >
-      {!hasToken ? (
+      {!token ? (
         <AuthStack>
           <AuthNotice tone="error" role="alert">
             Liên kết đặt lại mật khẩu thiếu mã token. Vui lòng yêu cầu liên kết mới.
@@ -77,7 +83,7 @@ export function ResetPasswordScreen({ hasToken }: { hasToken: boolean }) {
             idleLabel="Đặt mật khẩu"
             loadingLabel="Đang xử lý..."
           />
-          <NoticeArea message={notice} />
+          <NoticeArea message={notice} tone={noticeTone} />
         </AuthForm>
       )}
     </AuthShell>

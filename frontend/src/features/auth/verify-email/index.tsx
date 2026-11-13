@@ -1,26 +1,31 @@
 'use client';
 
-import { useState } from 'react';
-import { AuthForm, AuthLink, AuthNotice, AuthShell, AuthStack, SubmitButton } from '../components';
-import { NoticeArea, useMockSubmit } from '../common/shared';
+import { useEffect, useState } from 'react';
+import { AuthForm, AuthLink, AuthNotice, AuthShell, AuthStack, AuthTextField, SubmitButton } from '../components';
+import { NoticeArea } from '../common/shared';
+import { useAuthAction } from '../common/useAuthAction';
+import { authService } from '../services/auth.service';
 
 export function VerifyEmailScreen() {
+  const [email, setEmail] = useState('');
   const [seconds, setSeconds] = useState(0);
-  const { loading, notice, run } = useMockSubmit();
+  const { loading, notice, noticeTone, run } = useAuthAction();
 
-  const handleResend = async () => {
-    if (loading || seconds > 0) return;
-    await run('Giao diện đang ở chế độ demo: chưa có email nào được gửi đi.');
-    setSeconds(30);
-    const timer = setInterval(() => {
-      setSeconds((current) => {
-        if (current <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return current - 1;
-      });
-    }, 1000);
+  useEffect(() => {
+    if (seconds <= 0) return;
+    const timer = window.setTimeout(() => setSeconds((value) => value - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [seconds]);
+
+  const handleResend = () => {
+    if (loading || seconds > 0 || !email.trim()) return;
+    run(
+      () => authService.resendVerification(email),
+      {
+        successMessage: 'Nếu tài khoản cần xác minh, email hướng dẫn sẽ được gửi.',
+        onSuccess: () => setSeconds(45),
+      },
+    );
   };
 
   return (
@@ -37,14 +42,24 @@ export function VerifyEmailScreen() {
             void handleResend();
           }}
         >
+          <AuthTextField
+            label="Địa chỉ email"
+            type="email"
+            name="email"
+            autoComplete="email"
+            inputMode="email"
+            placeholder="ban@email.com"
+            value={email}
+            onChange={setEmail}
+          />
           <SubmitButton
             loading={loading}
-            disabled={seconds > 0}
+            disabled={seconds > 0 || !email.trim()}
             idleLabel={seconds > 0 ? `Gửi lại sau ${seconds}s` : 'Gửi lại email xác minh'}
             loadingLabel="Đang xử lý..."
           />
         </AuthForm>
-        <NoticeArea message={notice} />
+        <NoticeArea message={notice} tone={noticeTone} />
       </AuthStack>
     </AuthShell>
   );
@@ -68,12 +83,30 @@ const RESULTS: Record<string, { tone: 'success' | 'error' | 'info'; title: strin
   },
 };
 
-export function VerifyEmailResultScreen({ result }: { result?: string }) {
-  const data = (result && RESULTS[result]) || {
+export function VerifyEmailResultScreen({ token }: { token?: string }) {
+  const [result, setResult] = useState(token ? 'loading' : 'invalid');
+  const { notice, noticeTone, run } = useAuthAction();
+
+  useEffect(() => {
+    if (!token) return;
+    run(
+      () => authService.verifyEmail(token),
+      {
+        onSuccess: () => setResult('success'),
+        onError: () => setResult('invalid'),
+      },
+    );
+  }, [run, token]);
+
+  const data = (result && RESULTS[result]) || (result === 'loading' ? {
+    tone: 'info' as const,
+    title: 'Đang xác minh email',
+    text: 'Đang kiểm tra liên kết xác minh của bạn.',
+  } : {
     tone: 'info' as const,
     title: 'Chưa có kết quả',
-    text: 'Chưa có kết quả xác minh để hiển thị. Đây chỉ là trang giao diện, chưa kiểm tra token thật.',
-  };
+    text: notice || 'Chưa có kết quả xác minh để hiển thị.',
+  });
   return (
     <AuthShell
       eyebrow="Kết quả xác minh"
@@ -85,6 +118,10 @@ export function VerifyEmailResultScreen({ result }: { result?: string }) {
         {data.tone === 'success' ? '✓ ' : data.tone === 'error' ? '⚠ ' : ''}
         {data.title}
       </AuthNotice>
+      {notice && <NoticeArea message={notice} tone={noticeTone} />}
+      {result === 'expired' || result === 'invalid' ? (
+        <AuthLink href="/verify-email">Gửi lại email xác minh</AuthLink>
+      ) : null}
     </AuthShell>
   );
 }

@@ -2,20 +2,25 @@
 
 import { useState, type FormEvent } from 'react';
 import { AuthForm, AuthLink, AuthShell, AuthTextField, SubmitButton } from '../components';
-import { NoticeArea, useMockSubmit } from '../common/shared';
+import { NoticeArea } from '../common/shared';
+import { useAuthAction } from '../common/useAuthAction';
+import { authService } from '../services/auth.service';
 import { getEmailError } from '../common/validation';
 
 export function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
   const [touched, setTouched] = useState(false);
-  const { loading, notice, run } = useMockSubmit();
+  const { loading, notice, noticeTone, run } = useAuthAction();
   const emailError = getEmailError(email);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     setTouched(true);
     if (emailError || loading) return;
-    void run('Giao diện đang ở chế độ demo: chưa có email khôi phục nào được gửi đi.');
+    run(
+      () => authService.forgotPassword(email),
+      { successMessage: 'Nếu email có tài khoản, hướng dẫn đặt lại mật khẩu sẽ được gửi.' },
+    );
   };
 
   return (
@@ -44,7 +49,7 @@ export function ForgotPasswordScreen() {
           idleLabel="Gửi hướng dẫn"
           loadingLabel="Đang xử lý..."
         />
-        <NoticeArea message={notice} />
+        <NoticeArea message={notice} tone={noticeTone} />
       </AuthForm>
     </AuthShell>
   );

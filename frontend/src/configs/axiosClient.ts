@@ -4,7 +4,7 @@ import { notifications } from '@mantine/notifications';
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { theme } from '~/constants';
 import { EAPI_STATUS_CODE, EAPI_STATUS_CODE_V2 } from '~/types/enums';
-import handleLogout from '~/utils/handleLogout';
+// import handleLogout from '~/utils/handleLogout';
 import { handleRefreshToken } from '~/utils/refreshToken';
 import tokenManager from '~/utils/tokenManager';
 
@@ -19,7 +19,7 @@ export interface IOriginRequest extends AxiosRequestConfig {
 }
 
 const handleRequestSuccess = (config: AxiosRequestConfig): AxiosRequestConfig => {
-  let access_token = tokenManager.getAccessToken();
+  const access_token = tokenManager.getAccessToken();
   // const params = new URLSearchParams(window.location.search);
   // const isSDK = params.get('platform');
 
@@ -64,7 +64,7 @@ const handleResponseSuccess = (response: AxiosResponse) => {
   }
 
   if (accessToken && error_code === EAPI_STATUS_CODE.ACCOUNT_LOCKED) {
-    handleLogout();
+    // handleLogout();
     throw response.data;
   }
 

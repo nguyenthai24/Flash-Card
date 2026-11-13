@@ -1,45 +1,44 @@
 'use client';
 
-import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { AuthDivider, AuthNotice, AuthStack, SocialLoginButtons } from '../components';
-
-const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+import { authService, getOAuthUrl } from '../services/auth.service';
 
 export type Touched<K extends string> = Record<K, boolean>;
 
-// Mô phỏng thời gian xử lý ở local, không gọi backend.
-export function useMockSubmit() {
-  const [loading, setLoading] = useState(false);
-  const [notice, setNotice] = useState('');
-  const run = async (message: string) => {
-    setNotice('');
-    setLoading(true);
-    await wait(700);
-    setLoading(false);
-    setNotice(message);
-  };
-  return { loading, notice, run, setNotice };
-}
-
 export function SocialSection() {
-  const [message, setMessage] = useState('');
+  const { data: providers, isLoading, isError } = useQuery({
+    queryKey: ['auth', 'oauth-providers'],
+    queryFn: authService.oauthProviders,
+    staleTime: 5 * 60_000,
+  });
+
   return (
     <AuthStack>
       <AuthDivider>hoặc tiếp tục với</AuthDivider>
-      <SocialLoginButtons
-        onSelect={(provider) =>
-          setMessage(`Đăng nhập bằng ${provider} chưa được cấu hình. Không có yêu cầu nào được gửi đi.`)
-        }
-      />
-      <div aria-live="polite">{message && <AuthNotice tone="info">{message}</AuthNotice>}</div>
+      {providers?.length ? <SocialLoginButtons providers={providers} onSelect={(provider) => {
+        window.location.assign(getOAuthUrl(provider));
+      }} /> : null}
+      {!isLoading && !isError && !providers?.length && (
+        <AuthNotice tone="info">Chưa có nhà cung cấp đăng nhập mạng xã hội nào được cấu hình.</AuthNotice>
+      )}
+      {isError && (
+        <AuthNotice tone="error" role="alert">Không tải được phương thức đăng nhập mạng xã hội.</AuthNotice>
+      )}
     </AuthStack>
   );
 }
 
-export function NoticeArea({ message }: { message: string }) {
+export function NoticeArea({
+  message,
+  tone = 'info',
+}: {
+  message: string;
+  tone?: 'info' | 'success' | 'error';
+}) {
   return (
     <div role="status" aria-live="polite">
-      {message && <AuthNotice tone="info">{message}</AuthNotice>}
+      {message && <AuthNotice tone={tone} role={tone === 'error' ? 'alert' : 'status'}>{message}</AuthNotice>}
     </div>
   );
 }
