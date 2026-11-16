@@ -38,6 +38,21 @@ export class AuthRepository implements IAuthRepository {
     return user ? this.toRecord(user) : null;
   }
 
+  async findByUser(
+    phoneNumber?: string,
+    email?: string,
+  ): Promise<AuthUserRecord | null> {
+    const user = await this.userModel
+      .findOne({
+        $or: [{ phone_number: phoneNumber }, { email: email }],
+      })
+      .select(
+        '+password +verification_token_hash +verification_token_expires_at +password_reset_token_hash +password_reset_token_expires_at +refresh_sessions +locked_until',
+      )
+      .exec();
+    return user ? this.toRecord(user) : null;
+  }
+
   async findByUsername(username: string): Promise<AuthUserRecord | null> {
     const user = await this.userModel.findOne({ username }).exec();
     return user ? this.toRecord(user) : null;
@@ -77,12 +92,14 @@ export class AuthRepository implements IAuthRepository {
   }
 
   async consumeVerificationToken(
+    email: string,
     hash: string,
     verifiedAt: Date,
   ): Promise<boolean> {
     const user = await this.userModel
       .findOneAndUpdate(
         {
+          email,
           verification_token_hash: hash,
           verification_token_expires_at: { $gt: verifiedAt },
           email_verified_at: null,

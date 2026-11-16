@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Inject,
   Injectable,
+  InternalServerErrorException,
   Logger,
   ServiceUnavailableException,
   UnauthorizedException,
@@ -13,8 +14,9 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
-import { createHash, randomBytes, randomUUID } from 'node:crypto';
+import { createHash, randomBytes, randomInt, randomUUID } from 'node:crypto';
 
+import { ErrorCode } from '@/common/constants/error-code.constant';
 import { AUTH_REPOSITORY } from '@/common/constants/repository.constant';
 import { UserRole } from '@/common/shares/enums';
 import { RedisService } from '@/infrastructure/redis/redis.service';
@@ -24,8 +26,11 @@ import {
   OAuthAccountRecord,
 } from './interfaces/auth-repository.interface';
 import { AuthEmailService } from './auth-email.service';
+import { RegisterDto } from './dto/request/register.dto';
+import { generateOTP } from '@/utils';
+import { FIVE_MINUTE, REDIS_KEY } from '@/infrastructure/redis/redis.constants';
 
-const VERIFY_TOKEN_TTL_MS = 60 * 60 * 1000;
+const VERIFICATION_CODE_TTL_MS = 10 * 60 * 1000;
 const RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
 const RESEND_COOLDOWN_SECONDS = 45;
 const LOGIN_LOCK_THRESHOLD = 5;
@@ -60,91 +65,122 @@ export class AuthService {
     private readonly emailService: AuthEmailService,
   ) {}
 
-  async register(input: {
-    email?: string;
-    phone_number?: string;
-    password: string;
-    re_password: string;
-  }): Promise<{ data: null; message: string }> {
-    if (!input.email && !input.phone_number) {
+  async register(dto: RegisterDto): Promise<{ data: null; message: string }> {
+    const email = dto.email?.trim().toLowerCase();
+    const phoneNumber = dto.phone_number?.trim();
+
+    if (!email && !phoneNumber) {
       throw new BadRequestException({
-        code: 1,
-        message: 'Vui lòng cung cấp email hoặc số điện thoại.',
-      });
-    }
-
-    if (input.password !== input.re_password) {
-      throw this.authError(
-        'PASSWORDS_DO_NOT_MATCH',
-        'Mật khẩu nhập lại chưa khớp.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    if (input.email) {
-      const email = input.email.trim().toLowerCase();
-      if (await this.authRepository.findByEmail(email)) {
-        throw new ConflictException({
-          code: 'EMAIL_ALREADY_EXISTS',
-          message: 'Email này đã được sử dụng.',
-        });
-      }
-
-      // const email = input.email?.trim().toLowerCase();
-
-      const token = this.createOneTimeToken();
-      const name = email
-        .slice(0, email.indexOf('@'))
-        .replace(/[._-]+/g, ' ')
-        .trim();
-      const username = await this.uniqueUsername(
-        email.slice(0, email.indexOf('@')),
-      );
-      const user = await this.authRepository.create({
-        email,
-        username,
-        first_name: name.length >= 2 ? name.slice(0, 60) : 'FlashCard',
-        last_name: 'User',
-        phone_number: input.phone_number,
-        password: await argon2.hash(input.password),
-      });
-      await this.authRepository.update(user.id, {
-        verification_token_hash: this.hash(token),
-        verification_token_expires_at: new Date(
-          Date.now() + VERIFY_TOKEN_TTL_MS,
-        ),
-      });
-      try {
-        await this.emailService.sendVerificationEmail(email, token);
-      } catch (error) {
-        if (!(error instanceof ServiceUnavailableException)) throw error;
-        this.logger.error('Verification email delivery failed.');
-      }
-
-      return {
-        data: null,
+        error_code: ErrorCode.BAD_REQUEST,
         message:
-          'Tài khoản đã được tạo. Nếu chưa nhận được email xác minh, hãy yêu cầu gửi lại.',
-      };
+          'Vui lòng cung cấp email hoặc số điện thoại để nhận mã xác minh.',
+      });
     }
+
+    if (!phoneNumber) {
+      throw new BadRequestException({
+        error_code: ErrorCode.BAD_REQUEST,
+        message: 'Vui lòng cung cấp số điện thoại để nhận mã xác minh.',
+      });
+    }
+
+    if (!email) {
+      throw new BadRequestException({
+        error_code: ErrorCode.BAD_REQUEST,
+        message: 'Vui lòng cung cấp email để nhận mã xác minh.',
+      });
+    }
+
+    if (dto.password !== dto.re_password) {
+      throw new BadRequestException({
+        error_code: ErrorCode.BAD_REQUEST,
+        message: 'Mật khẩu nhập lại chưa khớp.',
+      });
+    }
+
+    const userExists = await this.authRepository.findByUser(phoneNumber);
+    if (userExists) {
+      throw new ConflictException({
+        error_code: ErrorCode.USER_ALREADY_EXISTS,
+        message: 'Người dùng này đã tồn tại.',
+      });
+    }
+
+    // if (await this.authRepository.findByEmail(email)) {
+    //   throw new ConflictException({
+    //     error_code: ErrorCode.EMAIL_ALREADY_EXISTS,
+    //     message: 'Email này đã được sử dụng.',
+    //   });
+    // }
+
+    const otp = generateOTP();
+
+    const verificationKey = email
+      ? REDIS_KEY.VERIFICATION(email.trim().toLowerCase())
+      : REDIS_KEY.VERIFICATION(phoneNumber);
+
+    // await this.redis.set(
+    //   REDIS_KEY.VERIFICATION.EMAIL(email),
+    //   token,
+    //   FIVE_MINUTE,
+    // );
+
+    // const emailName = email.slice(0, email.indexOf('@'));
+    // const firstName = emailName.replace(/[._-]+/g, ' ').trim();
+    // const username = await this.uniqueUsername(emailName);
+
+    try {
+      await this.redis.set(verificationKey, otp, FIVE_MINUTE);
+      const user = await this.authRepository.create({
+        email: dto.email,
+        phone_number: dto.phone_number,
+        password: await argon2.hash(dto.password),
+      });
+
+      // Gửi mã OTP đến email hoặc số điện thoại
+
+      await this.emailService.sendVerificationCode(email, otp);
+    } catch (error) {
+      throw new InternalServerErrorException({
+        error_code: ErrorCode.INTERNAL_SERVER_ERROR,
+        message: 'Đã xảy ra lỗi khi tạo tài khoản.',
+      });
+    }
+
+    // await this.authRepository.update(user.id, {
+    //   verification_token_hash: this.hash(token),
+    //   verification_token_expires_at: new Date(
+    //     Date.now() + VERIFICATION_CODE_TTL_MS,
+    //   ),
+    // });
+
+    // try {
+    //   await this.emailService.sendVerificationCode(email, token);
+    // } catch (error) {
+    //   if (!(error instanceof ServiceUnavailableException)) throw error;
+    //   this.logger.error('Verification code email delivery failed.');
+    // }
 
     return {
       data: null,
-      message: 'Tài khoản đã được tạo.',
+      message: 'Tài khoản đã được tạo. Vui lòng nhập mã OTP đã gửi đến email.',
     };
   }
 
-  async verifyEmail(token: string): Promise<{ data: null; message: string }> {
+  async verifyEmail(
+    emailInput: string,
+    code: string,
+  ): Promise<{ data: null; message: string }> {
     const consumed = await this.authRepository.consumeVerificationToken(
-      this.hash(token),
+      emailInput.trim().toLowerCase(),
+      this.hash(code),
       new Date(),
     );
     if (!consumed) {
-      throw this.authError(
-        'INVALID_OR_EXPIRED_TOKEN',
-        'Liên kết xác minh không hợp lệ hoặc đã hết hạn.',
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException({
+        error_code: ErrorCode.INVALID_VERIFICATION_CODE,
+        message: 'Mã OTP không hợp lệ hoặc đã hết hạn.',
+      });
     }
     return { data: null, message: 'Email đã được xác minh thành công.' };
   }
@@ -155,7 +191,7 @@ export class AuthService {
     const email = emailInput.trim().toLowerCase();
     const response = {
       data: null,
-      message: 'Nếu tài khoản cần xác minh, email hướng dẫn sẽ được gửi.',
+      message: 'Nếu tài khoản cần xác minh, mã OTP sẽ được gửi đến email.',
     };
     const user = await this.authRepository.findByEmail(email);
     if (!user || user.email_verified_at) return response;
@@ -163,17 +199,19 @@ export class AuthService {
     const cooldownKey = `auth:verification-cooldown:${this.hash(email)}`;
     if (await this.redis.exists(cooldownKey)) return response;
 
-    const token = this.createOneTimeToken();
+    const token = this.createVerificationCode();
     await this.authRepository.update(user.id, {
       verification_token_hash: this.hash(token),
-      verification_token_expires_at: new Date(Date.now() + VERIFY_TOKEN_TTL_MS),
+      verification_token_expires_at: new Date(
+        Date.now() + VERIFICATION_CODE_TTL_MS,
+      ),
     });
     await this.redis.set(cooldownKey, true, RESEND_COOLDOWN_SECONDS);
     try {
-      await this.emailService.sendVerificationEmail(email, token);
+      await this.emailService.sendVerificationCode(email, token);
     } catch (error) {
       if (!(error instanceof ServiceUnavailableException)) throw error;
-      this.logger.error('Verification email resend failed.');
+      this.logger.error('Verification code email resend failed.');
     }
     return response;
   }
@@ -784,6 +822,10 @@ export class AuthService {
 
   private refreshSecret(): string {
     return this.config.getOrThrow<string>('jwt.refreshSecret');
+  }
+
+  private createVerificationCode(): string {
+    return randomInt(0, 1_000_000).toString().padStart(6, '0');
   }
 
   private createOneTimeToken(): string {

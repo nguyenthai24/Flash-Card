@@ -11,13 +11,11 @@ export class AuthEmailService {
 
   constructor(private readonly config: ConfigService) {}
 
-  async sendVerificationEmail(email: string, token: string): Promise<void> {
-    const url = new URL('/verify-email/result', this.frontendUrl());
-    url.searchParams.set('token', token);
+  async sendVerificationCode(email: string, code: string): Promise<void> {
     await this.send(
       email,
-      'Xác minh địa chỉ email',
-      this.linkHtml(url, 'Xác minh email'),
+      'Mã OTP xác minh email FlashCard',
+      this.verificationCodeHtml(code),
     );
   }
 
@@ -75,5 +73,9 @@ export class AuthEmailService {
 
   private linkHtml(url: URL, label: string): string {
     return `<p>Xin chào,</p><p>Vui lòng nhấn nút bên dưới để tiếp tục.</p><p><a href="${url.toString()}">${label}</a></p><p>Nếu bạn không yêu cầu thao tác này, hãy bỏ qua email.</p>`;
+  }
+
+  private verificationCodeHtml(code: string): string {
+    return `<p>Xin chào,</p><p>Mã OTP xác minh email FlashCard của bạn là:</p><p style="font-size:28px;font-weight:bold;letter-spacing:8px">${code}</p><p>Mã có hiệu lực trong 10 phút. Nếu bạn không yêu cầu đăng ký, hãy bỏ qua email này.</p>`;
   }
 }

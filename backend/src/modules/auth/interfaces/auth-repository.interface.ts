@@ -35,10 +35,10 @@ export interface AuthUserRecord {
 }
 
 export interface CreateAuthUserData {
-  email: string;
-  username: string;
-  first_name: string;
-  last_name: string;
+  email?: string;
+  username?: string;
+  first_name?: string;
+  last_name?: string;
   phone_number?: string;
   password?: string;
   avatar?: string;
@@ -54,13 +54,21 @@ export interface IAuthRepository {
   findById(id: string): Promise<AuthUserRecord | null>;
   findByEmail(email: string): Promise<AuthUserRecord | null>;
   findByUsername(username: string): Promise<AuthUserRecord | null>;
+  findByUser(
+    phoneNumber?: string,
+    email?: string,
+  ): Promise<AuthUserRecord | null>;
   findByOAuthAccount(
     provider: OAuthAccountRecord['provider'],
     providerId: string,
   ): Promise<AuthUserRecord | null>;
   create(data: CreateAuthUserData): Promise<AuthUserRecord>;
   update(id: string, data: AuthUserUpdate): Promise<AuthUserRecord | null>;
-  consumeVerificationToken(hash: string, verifiedAt: Date): Promise<boolean>;
+  consumeVerificationToken(
+    email: string,
+    hash: string,
+    verifiedAt: Date,
+  ): Promise<boolean>;
   consumePasswordResetToken(
     hash: string,
     password: string,

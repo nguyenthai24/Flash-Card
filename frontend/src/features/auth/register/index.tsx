@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   AuthForm,
   AuthLink,
@@ -17,6 +18,7 @@ import { authService } from '../services/auth.service';
 import { getConfirmPasswordError, getEmailError, getNewPasswordError } from '../common/validation';
 
 export function RegistrationScreen() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -39,7 +41,10 @@ export function RegistrationScreen() {
     if (invalid || loading) return;
     run(
       () => authService.register({ email, password, re_password: confirm }),
-      { successMessage: 'Tài khoản đã được tạo. Hãy kiểm tra email để xác minh.' },
+      {
+        onSuccess: () =>
+          router.push(`/verify-email?email=${encodeURIComponent(email.trim())}`),
+      },
     );
   };
 

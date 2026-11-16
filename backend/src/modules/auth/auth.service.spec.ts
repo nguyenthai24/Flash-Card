@@ -16,8 +16,8 @@ describe('AuthService', () => {
   let service: AuthService;
   let repository: jest.Mocked<IAuthRepository>;
   let user: AuthUserRecord;
-  let verificationToken: string | undefined;
-  let sendVerificationEmail: jest.Mock;
+  let verificationCode: string | undefined;
+  let sendVerificationCode: jest.Mock;
   let verifyJwt: jest.Mock;
 
   beforeEach(() => {
@@ -33,7 +33,7 @@ describe('AuthService', () => {
       token_version: 0,
       oauth_accounts: [],
     };
-    verificationToken = undefined;
+    verificationCode = undefined;
 
     repository = {
       findById: jest.fn().mockImplementation(() => Promise.resolve(user)),
@@ -50,8 +50,9 @@ describe('AuthService', () => {
       }),
       consumeVerificationToken: jest
         .fn()
-        .mockImplementation((hash, verifiedAt) => {
+        .mockImplementation((email, hash, verifiedAt) => {
           if (
+            user.email !== email ||
             user.verification_token_hash !== hash ||
             !user.verification_token_expires_at ||
             user.verification_token_expires_at <= verifiedAt ||
@@ -84,8 +85,8 @@ describe('AuthService', () => {
           return Promise.resolve(true);
         }),
     };
-    sendVerificationEmail = jest.fn().mockImplementation((_email, token) => {
-      verificationToken = token;
+    sendVerificationCode = jest.fn().mockImplementation((_email, code) => {
+      verificationCode = code;
       return Promise.resolve();
     });
 
@@ -103,13 +104,13 @@ describe('AuthService', () => {
       set: jest.fn().mockResolvedValue(undefined),
     } as unknown as RedisService;
     const email = {
-      sendVerificationEmail,
+      sendVerificationCode,
       sendPasswordResetEmail: jest.fn(),
     } as unknown as AuthEmailService;
     service = new AuthService(repository, jwt, config, redis, email);
   });
 
-  it('creates a password hash and stores only a hashed verification token', async () => {
+  it('creates a password hash and stores only a hashed verification code', async () => {
     await service.register({
       email: 'Learner@example.com',
       password: 'strong-pass-123',
@@ -118,10 +119,11 @@ describe('AuthService', () => {
 
     expect(user.email).toBe('learner@example.com');
     expect(await argon2.verify(user.password!, 'strong-pass-123')).toBe(true);
-    expect(user.verification_token_hash).not.toBe(verificationToken);
-    expect(sendVerificationEmail).toHaveBeenCalledWith(
+    expect(user.verification_token_hash).not.toBe(verificationCode);
+    expect(verificationCode).toMatch(/^\d{6}$/);
+    expect(sendVerificationCode).toHaveBeenCalledWith(
       'learner@example.com',
-      verificationToken,
+      verificationCode,
     );
   });
 
@@ -137,19 +139,19 @@ describe('AuthService', () => {
     expect(repository.create.mock.calls).toHaveLength(0);
   });
 
-  it('consumes a valid email verification token once', async () => {
+  it('consumes a valid email verification code once', async () => {
     await service.register({
       email: 'learner@example.com',
       password: 'strong-pass-123',
       re_password: 'strong-pass-123',
     });
-    await service.verifyEmail(verificationToken!);
+    await service.verifyEmail('learner@example.com', verificationCode!);
 
     expect(user.email_verified_at).toBeInstanceOf(Date);
     expect(user.verification_token_hash).toBeUndefined();
-    await expect(service.verifyEmail(verificationToken!)).rejects.toThrow(
-      'Liên kết xác minh không hợp lệ hoặc đã hết hạn.',
-    );
+    await expect(
+      service.verifyEmail('learner@example.com', verificationCode!),
+    ).rejects.toThrow('Mã OTP không hợp lệ hoặc đã hết hạn.');
   });
 
   it('creates a server-side session for verified users and honors remember me', async () => {

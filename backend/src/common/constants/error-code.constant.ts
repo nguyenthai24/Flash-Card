@@ -19,6 +19,7 @@ export enum ErrorCode {
   INVALID_TOKEN = 200003,
   TOKEN_EXPIRED = 200004,
   REFRESH_TOKEN_REUSED = 200005,
+  INVALID_VERIFICATION_CODE = 200006,
 
   // ==========================================
   // USERS: 300000 - 399999

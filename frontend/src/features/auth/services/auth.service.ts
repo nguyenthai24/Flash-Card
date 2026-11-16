@@ -12,15 +12,16 @@ export interface AuthUser {
 interface ApiResponse<T> {
   success: boolean;
   data: T;
+  error_code?: number;
   error_message?: string;
-  code?: string;
+  code?: number | string;
   message?: string | string[];
 }
 
 export class AuthApiError extends Error {
   constructor(
     message: string,
-    readonly code?: string,
+    readonly code?: number | string,
   ) {
     super(message);
     this.name = 'AuthApiError';
@@ -51,10 +52,12 @@ async function request<T>(path: string, body?: unknown): Promise<T> {
   }
   const result = (await response.json()) as ApiResponse<T>;
   if (!response.ok || result.success === false) {
-    const message = Array.isArray(result.message)
-      ? result.message.join(' ')
-      : result.message ?? result.error_message ?? 'Đã có lỗi xảy ra. Vui lòng thử lại.';
-    throw new AuthApiError(message, result.code);
+    const message = result.error_message ?? (
+      Array.isArray(result.message)
+        ? result.message.join(' ')
+        : result.message
+    ) ?? 'Đã có lỗi xảy ra. Vui lòng thử lại.';
+    throw new AuthApiError(message, result.error_code ?? result.code);
   }
   return result.data;
 }
@@ -67,7 +70,8 @@ export const authService = {
   logout: () => request<null>('/auth/logout', {}),
   me: () => request<AuthUser>('/auth/me'),
   refresh: () => request<AuthUser>('/auth/refresh', {}),
-  verifyEmail: (token: string) => request<null>('/auth/verify-email', { token }),
+  verifyEmail: (email: string, code: string) =>
+    request<null>('/auth/verify-email', { email, code }),
   resendVerification: (email: string) =>
     request<null>('/auth/resend-verification', { email }),
   forgotPassword: (email: string) => request<null>('/auth/forgot-password', { email }),

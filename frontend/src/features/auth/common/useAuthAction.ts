@@ -12,6 +12,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   INVALID_CREDENTIALS: 'Email hoặc mật khẩu chưa chính xác.',
   INVALID_OR_EXPIRED_TOKEN: 'Liên kết không hợp lệ hoặc đã hết hạn.',
   ACCOUNT_TEMPORARILY_LOCKED: 'Tài khoản tạm khóa. Vui lòng thử lại sau 15 phút.',
+  '200001': 'Email này đã được sử dụng.',
+  '200006': 'Mã OTP không hợp lệ hoặc đã hết hạn.',
 };
 
 export function useAuthAction() {
@@ -31,7 +33,7 @@ export function useAuthAction() {
     },
     onError: (error: Error, variables) => {
       const code = error instanceof AuthApiError ? error.code : undefined;
-      setNotice((code && ERROR_MESSAGES[code]) || error.message);
+      setNotice((code !== undefined && ERROR_MESSAGES[String(code)]) || error.message);
       setNoticeTone('error');
       variables.onError?.();
     },

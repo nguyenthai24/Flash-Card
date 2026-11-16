@@ -192,8 +192,6 @@ import { ErrorCode } from '@/common/constants/error-code.constant';
 // Cấu trúc response chuẩn khi API xảy ra lỗi
 interface ErrorResponse {
   success: false;
-  code: string;
-  message: string;
   error_code: number;
   error_message: string;
   data: unknown;
@@ -215,8 +213,8 @@ export class AllExceptionFilter implements ExceptionFilter {
     const statusCode = this.getHttpStatus(exception);
     const errorResponse = this.buildErrorResponse(exception);
 
-    // Ghi log exception theo mức độ nghiêm trọng
-    this.logException(exception, request, statusCode);
+    // Ghi log chi tiết cho mọi exception
+    this.logException(exception, request, statusCode, errorResponse);
 
     // Trả response lỗi về client
     response.status(statusCode).json(errorResponse);
@@ -242,8 +240,6 @@ export class AllExceptionFilter implements ExceptionFilter {
     if (exception instanceof AppException) {
       return {
         success: false,
-        code: String(exception.errorCode),
-        message: exception.message,
         error_code: exception.errorCode,
         error_message: exception.message,
         data: null,
@@ -253,8 +249,6 @@ export class AllExceptionFilter implements ExceptionFilter {
     // 2. Xử lý lỗi validation được tạo từ ValidationPipe
     if (exception instanceof BadRequestException) {
       const body = exception.getResponse();
-
-      console.log(body);
 
       // Kiểm tra response có chứa danh sách lỗi validation hay không
       if (typeof body === 'object' && body !== null) {
@@ -269,18 +263,10 @@ export class AllExceptionFilter implements ExceptionFilter {
         if (errors) {
           return {
             success: false,
-            code:
-              'code' in body && typeof body.code === 'string'
-                ? body.code
-                : 'VALIDATION_ERROR',
-            message:
-              'message' in body && typeof body.message === 'string'
-                ? body.message
-                : 'Validation failed',
-            error_code:
-              'error_code' in body && typeof body.error_code === 'number'
-                ? body.error_code
-                : ErrorCode.VALIDATION_ERROR,
+            error_code: this.getHttpErrorCode(
+              exception,
+              ErrorCode.VALIDATION_ERROR,
+            ),
             error_message:
               'message' in body && typeof body.message === 'string'
                 ? body.message
@@ -296,9 +282,7 @@ export class AllExceptionFilter implements ExceptionFilter {
       const message = this.getHttpErrorMessage(exception);
       return {
         success: false,
-        code: this.getStringErrorCode(exception),
-        message,
-        error_code: this.getErrorCode(exception.getStatus()),
+        error_code: this.getHttpErrorCode(exception),
         error_message: message,
         data: null,
       };
@@ -307,43 +291,27 @@ export class AllExceptionFilter implements ExceptionFilter {
     // 4. Xử lý các exception không xác định hoặc lỗi ngoài dự kiến
     return {
       success: false,
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'Internal server error',
       error_code: ErrorCode.INTERNAL_SERVER_ERROR,
       error_message: 'Internal server error',
       data: null,
     };
   }
 
-  private getStringErrorCode(exception: HttpException): string {
+  private getHttpErrorCode(
+    exception: HttpException,
+    fallback?: ErrorCode,
+  ): number {
     const body = exception.getResponse();
     if (
       typeof body === 'object' &&
       body !== null &&
-      'code' in body &&
-      typeof body.code === 'string'
+      'error_code' in body &&
+      typeof body.error_code === 'number'
     ) {
-      return body.code;
+      return body.error_code;
     }
 
-    switch (exception.getStatus()) {
-      case HttpStatus.BAD_REQUEST:
-        return 'BAD_REQUEST';
-      case HttpStatus.UNAUTHORIZED:
-        return 'UNAUTHORIZED';
-      case HttpStatus.FORBIDDEN:
-        return 'FORBIDDEN';
-      case HttpStatus.NOT_FOUND:
-        return 'NOT_FOUND';
-      case HttpStatus.CONFLICT:
-        return 'CONFLICT';
-      case HttpStatus.TOO_MANY_REQUESTS:
-        return 'TOO_MANY_REQUESTS';
-      case HttpStatus.SERVICE_UNAVAILABLE:
-        return 'SERVICE_UNAVAILABLE';
-      default:
-        return 'INTERNAL_SERVER_ERROR';
-    }
+    return fallback ?? this.getErrorCode(exception.getStatus());
   }
 
   /**
@@ -405,29 +373,24 @@ export class AllExceptionFilter implements ExceptionFilter {
   }
 
   /**
-   * Ghi log exception để hỗ trợ theo dõi và debug hệ thống.
-   *
-   * - Lỗi 4xx: sử dụng warn vì thường liên quan đến request từ client.
-   * - Lỗi 5xx: sử dụng error và ghi thêm stack trace để điều tra.
+   * Ghi log đầy đủ exception và request để hỗ trợ theo dõi, debug.
    */
   private logException(
     exception: unknown,
     request: Request,
     statusCode: number,
+    errorResponse: ErrorResponse,
   ): void {
-    const message = `${request.method} ${request.originalUrl} - ${statusCode}`;
+    const message = [
+      `Request failed: ${request.method} ${request.originalUrl}`,
+      `HTTP status: ${statusCode}`,
+      `Error code: ${errorResponse.error_code}`,
+      `Error message: ${errorResponse.error_message}`,
+    ].join(' | ');
 
-    // Lỗi server cần ghi lại stack trace để tìm nguyên nhân
-    if (statusCode >= HttpStatus.INTERNAL_SERVER_ERROR) {
-      this.logger.error(
-        message,
-        exception instanceof Error ? exception.stack : String(exception),
-      );
-
-      return;
-    }
-
-    // Lỗi phía client chỉ ghi thông tin request và HTTP status
-    this.logger.warn(message);
+    this.logger.error(
+      message,
+      exception instanceof Error ? exception.stack : String(exception),
+    );
   }
 }

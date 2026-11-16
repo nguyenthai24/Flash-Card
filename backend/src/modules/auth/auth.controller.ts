@@ -16,7 +16,12 @@ import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
-import { EmailDto, ResetPasswordDto, TokenDto } from './dto/request/token.dto';
+import {
+  EmailDto,
+  ResetPasswordDto,
+  VerifyEmailDto,
+  TokenDto,
+} from './dto/request/token.dto';
 import { LoginDto } from './dto/request/login.dto';
 import { RegisterDto } from './dto/request/register.dto';
 import { AuthService } from './auth.service';
@@ -38,7 +43,7 @@ export class AuthController {
   @Post('auth/register')
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
-  @ApiOperation({ summary: 'Đăng ký và gửi liên kết xác minh email ' })
+  @ApiOperation({ summary: 'Đăng ký và gửi mã OTP xác minh email' })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
@@ -116,15 +121,17 @@ export class AuthController {
   }
 
   @Post('auth/verify-email')
-  @ApiOperation({ summary: 'Verify an email address with a one-time token' })
-  verifyEmail(@Body() dto: TokenDto) {
-    return this.authService.verifyEmail(dto.token);
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @ApiOperation({ summary: 'Xác minh email bằng mã OTP' })
+  verifyEmail(@Body() dto: VerifyEmailDto) {
+    return this.authService.verifyEmail(dto.email, dto.code);
   }
 
   @Post('auth/resend-verification')
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 3, ttl: 60_000 } })
-  @ApiOperation({ summary: 'Resend an email verification link' })
+  @ApiOperation({ summary: 'Gửi lại mã OTP xác minh email' })
   resendVerification(@Body() dto: EmailDto) {
     return this.authService.resendVerification(dto.email);
   }
