@@ -8,10 +8,10 @@ export type UserDocument = HydratedDocument<User>;
 
 @Schema({})
 export class User extends BaseEntity {
-  @Prop({ required: true, minlength: 2, maxlength: 60 })
+  @Prop({ minlength: 2, maxlength: 60 })
   first_name!: string;
 
-  @Prop({ required: true })
+  @Prop({})
   last_name!: string;
 
   @Prop({
@@ -23,14 +23,13 @@ export class User extends BaseEntity {
   })
   email!: string;
 
-  @Prop({
-    match: /^([+]\d{2})?\d{10}$/,
-  })
-  phone_number!: string;
+  // @Prop({
+  //   match: /^([+]\d{2})?\d{10}$/,
+  // })
+  // phone_number!: string;
 
   @Prop({
-    required: true,
-    unique: true,
+    required: false,
   })
   username!: string;
 
@@ -73,11 +72,11 @@ export class User extends BaseEntity {
   @Prop({ type: Date, default: null })
   email_verified_at?: Date | null;
 
-  @Prop({ select: false })
-  verification_token_hash?: string;
+  // @Prop({ select: false })
+  // verification_token_hash?: string;
 
-  @Prop({ select: false })
-  verification_token_expires_at?: Date;
+  // @Prop({ select: false })
+  // verification_token_expires_at?: Date;
 
   @Prop({ select: false })
   password_reset_token_hash?: string;

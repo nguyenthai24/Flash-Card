@@ -29,6 +29,7 @@ import { AuthEmailService } from './auth-email.service';
 import { RegisterDto } from './dto/request/register.dto';
 import { generateOTP } from '@/utils';
 import { FIVE_MINUTE, REDIS_KEY } from '@/infrastructure/redis/redis.constants';
+import { MailService } from '../mail/mail.service';
 
 const VERIFICATION_CODE_TTL_MS = 10 * 60 * 1000;
 const RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
@@ -63,108 +64,65 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly redis: RedisService,
     private readonly emailService: AuthEmailService,
+    private readonly mailService: MailService,
   ) {}
 
-  async register(dto: RegisterDto): Promise<{ data: null; message: string }> {
-    const email = dto.email?.trim().toLowerCase();
-    const phoneNumber = dto.phone_number?.trim();
+  async register(dto: RegisterDto): Promise<any> {
+    const email = dto.email?.trim();
 
-    if (!email && !phoneNumber) {
-      throw new BadRequestException({
-        error_code: ErrorCode.BAD_REQUEST,
-        message:
-          'Vui lòng cung cấp email hoặc số điện thoại để nhận mã xác minh.',
-      });
-    }
-
-    if (!phoneNumber) {
-      throw new BadRequestException({
-        error_code: ErrorCode.BAD_REQUEST,
-        message: 'Vui lòng cung cấp số điện thoại để nhận mã xác minh.',
-      });
-    }
+    console.log(111111111, email);
 
     if (!email) {
       throw new BadRequestException({
-        error_code: ErrorCode.BAD_REQUEST,
         message: 'Vui lòng cung cấp email để nhận mã xác minh.',
       });
     }
 
     if (dto.password !== dto.re_password) {
       throw new BadRequestException({
-        error_code: ErrorCode.BAD_REQUEST,
         message: 'Mật khẩu nhập lại chưa khớp.',
       });
     }
 
-    const userExists = await this.authRepository.findByUser(phoneNumber);
+    const userExists = await this.authRepository.findByEmail(email);
+
     if (userExists) {
+      console.log('234');
       throw new ConflictException({
-        error_code: ErrorCode.USER_ALREADY_EXISTS,
         message: 'Người dùng này đã tồn tại.',
       });
     }
 
-    // if (await this.authRepository.findByEmail(email)) {
-    //   throw new ConflictException({
-    //     error_code: ErrorCode.EMAIL_ALREADY_EXISTS,
-    //     message: 'Email này đã được sử dụng.',
-    //   });
-    // }
-
     const otp = generateOTP();
 
-    const verificationKey = email
-      ? REDIS_KEY.VERIFICATION(email.trim().toLowerCase())
-      : REDIS_KEY.VERIFICATION(phoneNumber);
-
-    // await this.redis.set(
-    //   REDIS_KEY.VERIFICATION.EMAIL(email),
-    //   token,
-    //   FIVE_MINUTE,
-    // );
-
-    // const emailName = email.slice(0, email.indexOf('@'));
-    // const firstName = emailName.replace(/[._-]+/g, ' ').trim();
-    // const username = await this.uniqueUsername(emailName);
+    const verificationKey = REDIS_KEY.VERIFICATION(email.trim().toLowerCase());
+    await this.redis.set(verificationKey, otp, FIVE_MINUTE);
 
     try {
-      await this.redis.set(verificationKey, otp, FIVE_MINUTE);
       const user = await this.authRepository.create({
-        email: dto.email,
-        phone_number: dto.phone_number,
+        email: email,
         password: await argon2.hash(dto.password),
       });
+      console.log('User created:', user);
+      // Gửi mã OTP đến email
+      await this.mailService.sendUserConfirmation(user, otp);
+
+      return {
+        data: user ?? null,
+        message:
+          'Tài khoản đã được tạo. Vui lòng nhập mã OTP đã gửi đến email.',
+      };
 
       // Gửi mã OTP đến email hoặc số điện thoại
-
-      await this.emailService.sendVerificationCode(email, otp);
     } catch (error) {
-      throw new InternalServerErrorException({
-        error_code: ErrorCode.INTERNAL_SERVER_ERROR,
-        message: 'Đã xảy ra lỗi khi tạo tài khoản.',
-      });
+      console.log('Error creating user:', error);
+      throw error;
+      // this.logger.error('Error creating user', error);
+      // throw new InternalServerErrorException({
+      //   error_code: ErrorCode.INTERNAL_SERVER_ERROR,
+      //   message: 'Đã xảy ra lỗi khi tạo tài khoản.',
+      // });
     }
-
-    // await this.authRepository.update(user.id, {
-    //   verification_token_hash: this.hash(token),
-    //   verification_token_expires_at: new Date(
-    //     Date.now() + VERIFICATION_CODE_TTL_MS,
-    //   ),
-    // });
-
-    // try {
-    //   await this.emailService.sendVerificationCode(email, token);
-    // } catch (error) {
-    //   if (!(error instanceof ServiceUnavailableException)) throw error;
-    //   this.logger.error('Verification code email delivery failed.');
-    // }
-
-    return {
-      data: null,
-      message: 'Tài khoản đã được tạo. Vui lòng nhập mã OTP đã gửi đến email.',
-    };
   }
 
   async verifyEmail(

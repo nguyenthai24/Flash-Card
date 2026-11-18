@@ -11,9 +11,11 @@ import { AuthEmailService } from './auth-email.service';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { AuthRepository } from './repositories/auth.repository';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
+    MailModule,
     ConfigModule,
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 10 }]),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),

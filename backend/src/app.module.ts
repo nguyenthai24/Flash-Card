@@ -11,6 +11,7 @@ import { RedisModule } from './infrastructure/redis/redis.module';
 import { HealthModule } from './infrastructure/health/health.module';
 import { OrderModule } from './modules/orders/order.module';
 import { UserModule } from './modules/users/user.module';
+import { MailModule } from './modules/mail/mail.module';
 
 @Module({
   imports: [
@@ -30,6 +31,8 @@ import { UserModule } from './modules/users/user.module';
     OrderModule,
     UserModule,
     AuthModule,
+    MailModule,
+
     // HealthModule,
   ],
   controllers: [AppController],

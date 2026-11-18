@@ -44,7 +44,6 @@ export class UserRepository implements IUserRepository {
   }
 
   async create(data: CreateUserData): Promise<UserRecord> {
-    console.log(data);
     const user = await this.userModel.create(data);
 
     return this.toRecord(user);
@@ -67,9 +66,9 @@ export class UserRepository implements IUserRepository {
       first_name: user.first_name,
       last_name: user.last_name,
       email: user.email,
-      username: user.username,
+      username: user.username ?? null,
       password: user.password,
-      phone_number: user.phone_number,
+      // phone_number: user.phone_number,
       avatar: user.avatar,
       date_of_birth: user.date_of_birth,
       gender: user.gender,
